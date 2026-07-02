@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ควิซระบบประสาท (ระดับยากมาก)</title>
+<style>
+  :root{
+    --bg:#0f1b2d; --card:#182a44; --card2:#1f3454; --primary:#5cc8e6; --primary-d:#3aa9c9;
+    --ok:#3ecf8e; --ok-bg:#123a2c; --no:#ff6b6b; --no-bg:#3a1a1c;
+    --text:#e9f1fa; --muted:#9fb2c8; --line:#2a415f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Sarabun","Segoe UI Historic","Tahoma","Segoe UI",system-ui,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:740px; margin:0 auto; padding:16px 14px 48px;}
+  header{text-align:center; margin:10px 0 18px;}
+  header h1{font-size:1.45rem; margin:0 0 4px; color:var(--primary);}
+  header .badge{display:inline-block; background:#7a1f2b; color:#ffd9dc; font-size:.75rem; font-weight:700;
+    padding:3px 12px; border-radius:99px; letter-spacing:.5px; margin-top:4px;}
+  header p{margin:6px 0 0; color:var(--muted); font-size:.9rem;}
+
+  .card{background:var(--card); border-radius:16px; padding:20px 18px;
+    box-shadow:0 8px 26px rgba(0,0,0,.35); border:1px solid var(--line);}
+
+  .bar-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:.85rem; color:var(--muted);}
+  .progress{height:8px; background:#0c1626; border-radius:99px; overflow:hidden; margin-bottom:18px;}
+  .progress > i{display:block; height:100%; width:0; background:var(--primary); transition:width .3s;}
+
+  .qnum{font-size:.8rem; color:var(--primary); font-weight:700; letter-spacing:.3px;}
+  .question{font-size:1.1rem; font-weight:600; margin:2px 0 16px;}
+
+  .choices{display:flex; flex-direction:column; gap:10px;}
+  .choice{display:flex; align-items:flex-start; gap:10px; width:100%; text-align:left;
+    padding:13px 14px; border-radius:12px; cursor:pointer; background:var(--card2);
+    border:2px solid var(--line); color:var(--text); font-size:1rem; font-family:inherit; transition:.15s;}
+  .choice:hover:not(:disabled){border-color:var(--primary);}
+  .choice .tag{flex:0 0 26px; height:26px; border-radius:50%; background:#26405f; color:var(--primary);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; margin-top:1px;}
+  .choice:disabled{cursor:default;}
+  .choice.correct{background:var(--ok-bg); border-color:var(--ok); color:#c9ffe6;}
+  .choice.correct .tag{background:var(--ok); color:#05261a;}
+  .choice.wrong{background:var(--no-bg); border-color:var(--no); color:#ffd6d6;}
+  .choice.wrong .tag{background:var(--no); color:#3a0d0d;}
+
+  .explain{margin-top:16px; padding:12px 14px; border-radius:12px; font-size:.93rem;
+    background:#0e2033; border-left:4px solid var(--primary); display:none;}
+  .explain.show{display:block;}
+  .explain b{color:var(--primary);}
+
+  .actions{margin-top:18px; display:flex; gap:10px;}
+  .btn{flex:1; padding:13px; border:none; border-radius:12px; cursor:pointer; font-size:1.02rem;
+    font-weight:700; font-family:inherit; color:#05261a; background:var(--primary); transition:.15s;}
+  .btn:hover{background:var(--primary-d);}
+  .btn.ghost{background:#26405f; color:var(--primary);}
+  .btn:disabled{opacity:.35; cursor:default;}
+
+  .result{text-align:center; display:none;}
+  .result.show{display:block;}
+  .score-big{font-size:3rem; font-weight:800; color:var(--primary); margin:6px 0;}
+  .score-sub{color:var(--muted); margin-bottom:6px;}
+  .medal{font-size:2.6rem;}
+  .msg{font-size:1.05rem; margin:8px 0 20px; font-weight:600;}
+  footer{text-align:center; margin-top:20px; color:var(--muted); font-size:.8rem;}
+  #noJs{background:#7a1f2b; color:#ffd9dc; padding:14px; border-radius:12px; text-align:center; margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🧠 ควิซระบบประสาท</h1>
+    <div class="badge">ระดับ: ยากมาก · วิเคราะห์/ประยุกต์</div>
+    <p>45 ข้อ · เฉลยพร้อมเหตุผล</p>
+  </header>
+
+  <noscript>
+    <div id="noJs">ต้องเปิดในเบราว์เซอร์ Safari/Chrome และเปิดใช้งาน JavaScript<br>
+    (บน iPad: กดค้างที่ไฟล์ → แชร์ → เปิดใน Safari — อย่าดูผ่านหน้าพรีวิว)</div>
+  </noscript>
+
+  <div class="card" id="quizCard">
+    <div class="bar-row">
+      <span id="counter">ข้อ 1 / 45</span>
+      <span id="scoreLive">คะแนน 0</span>
+    </div>
+    <div class="progress"><i id="progFill"></i></div>
+    <div class="qnum" id="qnum">คำถามที่ 1</div>
+    <div class="question" id="qText">...</div>
+    <div class="choices" id="choices"></div>
+    <div class="explain" id="explain"></div>
+    <div class="actions">
+      <button class="btn" id="nextBtn" disabled>ถัดไป →</button>
+    </div>
+  </div>
+
+  <div class="card result" id="resultCard">
+    <div class="medal" id="medal">🎉</div>
+    <div class="score-sub">คะแนนของคุณ</div>
+    <div class="score-big"><span id="finalScore">0</span> / 45</div>
+    <div class="msg" id="finalMsg"></div>
+    <div class="actions"><button class="btn" id="restartBtn">เล่นใหม่อีกครั้ง</button></div>
+  </div>
+
+  <footer>สื่อการเรียน — ระบบประสาท (ระดับยากมาก)</footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ---- Membrane potential / equilibrium potential ----
+  {q:"จากตารางความเข้มข้นไอออน (K⁺ ใน 140 / นอก 5 mM) ทำให้ E_K ≈ −102 mV แต่ resting potential จริง ≈ −70 mV ข้อใดอธิบายส่วนต่างนี้ได้ดีที่สุด", c:["เยื่อในระยะพักยอมให้ Na⁺ รั่วเข้าได้บ้าง ค่าจริงจึงบวกกว่า E_K เล็กน้อย","K⁺ ถูกสูบออกจนหมด ค่าจึงลดลง","Cl⁻ เป็นตัวกำหนด resting potential เพียงตัวเดียว","sodium-potassium pump ทำให้ค่าเข้าใกล้ E_Na"], a:0, e:"resting potential อยู่ใกล้ E_K แต่ไม่เท่า เพราะเยื่อมี permeability ต่อ Na⁺ อยู่บ้าง (Na⁺ leak) จึงดึงค่าให้บวกขึ้นจาก −102 มาที่ ~−70 mV"},
+  {q:"ถ้าเพิ่ม K⁺ นอกเซลล์จาก 5 เป็น 20 mM (เข้าใกล้ภายในมากขึ้น) ผลต่อ resting membrane potential คือ", c:["depolarize (เป็นลบน้อยลง) เพราะ gradient ของ K⁺ ที่จะออกลดลง","hyperpolarize (เป็นลบมากขึ้น)","ไม่เปลี่ยน เพราะ pump ชดเชย","กลายเป็น +56 mV ทันที"], a:0, e:"เมื่อ K⁺ นอกสูงขึ้น แรงผลักให้ K⁺ ออกน้อยลง เซลล์จึงเป็นลบน้อยลง (depolarize) — เป็นเหตุผลว่าทำไมภาวะ hyperkalemia กระตุ้นเซลล์ผิดปกติได้"},
+  {q:"เหตุใด Na⁺/K⁺ pump จึงมีส่วน 'ทางอ้อม' ต่อ resting potential แม้จะสูบ 3Na⁺ ออก : 2K⁺ เข้า", c:["ทั้งรักษา gradient ให้ leak channel ทำงาน และตัว pump เองสร้างประจุลบสุทธิเล็กน้อย (electrogenic)","เพราะ pump เปิด voltage-gated channel","เพราะ pump ปล่อย neurotransmitter","เพราะ pump ทำลายไมอีลิน"], a:0, e:"pump เป็น electrogenic (ออก 3 เข้า 2 = สุทธิลบ) และที่สำคัญกว่าคือรักษา gradient ไว้ให้ leak channel สร้าง diffusion potential ต่อไปได้"},
+
+  // ---- Action potential mechanics ----
+  {q:"ระหว่าง Falling phase (repolarization) ทิศการเคลื่อนที่ของ Na⁺ และ K⁺ ที่ถูกต้องคือ", c:["Na⁺ channel inactivate (Na⁺ เข้าไม่ได้), K⁺ ไหลออก","Na⁺ ไหลเข้าต่อ, K⁺ ไหลเข้า","ทั้ง Na⁺ และ K⁺ ไหลออก","Na⁺ ไหลออก, K⁺ ไหลเข้า"], a:0, e:"ช่วงลง: ช่อง Na⁺ ส่วนใหญ่ inactivate หยุด Na⁺ เข้า ขณะช่อง K⁺ เปิด K⁺ ไหลออกทำให้ภายในเป็นลบอีกครั้ง"},
+  {q:"เหตุผลหลักที่ action potential เดินทางไป 'ทิศเดียว' ไม่ย้อนกลับ คือ", c:["บริเวณที่เพิ่งเกิด AP อยู่ใน refractory period (ช่อง Na⁺ ยัง inactivate)","axon มีไมอีลินเฉพาะปลายด้านเดียว","threshold ด้านหลังสูงกว่าเสมอ","K⁺ หมดจากด้านหลัง"], a:0, e:"บริเวณข้างหลังที่เพิ่งยิงยังอยู่ในระยะดื้อ (Na⁺ channel inactivate) จึงกระตุ้นซ้ำไม่ได้ AP จึงไปข้างหน้าทางเดียว"},
+  {q:"ในกราฟ AP ที่ให้ resting = −60 mV, threshold = −50 mV, overshoot = +40 mV ข้อสรุปใดถูก", c:["ต้อง depolarize ขึ้น 10 mV จึงถึง threshold และช่วง overshoot ภายในเซลล์เป็นบวกเทียบภายนอก","ต้อง depolarize 40 mV จึงถึง threshold","overshoot คือช่วงที่เป็นลบมากที่สุด","threshold ต่ำกว่า resting"], a:0, e:"จาก −60 → −50 คือระยะ 10 mV; ที่ +40 mV ภายในเซลล์กลับเป็นบวกเทียบภายนอก (overshoot)"},
+  {q:"Relative refractory period ต่างจาก Absolute refractory period อย่างไร", c:["ช่วง relative ยังกระตุ้นให้เกิด AP ได้ถ้าสิ่งเร้าแรงพอ เพราะช่อง Na⁺ บางส่วนกลับพร้อมแล้ว","relative กระตุ้นไม่ได้เลย","absolute ใช้สิ่งเร้าแรงพอก็ได้","ทั้งสองเหมือนกันทุกประการ"], a:0, e:"absolute = กระตุ้นไม่ได้เลย (Na⁺ channel inactivate); relative = ต้องใช้แรงมากกว่าปกติเพราะยัง hyperpolarize และ Na⁺ channel ยังกลับไม่ครบ"},
+  {q:"ยาชาบางชนิดทำให้ Na⁺ เข้าเซลล์ไม่ได้ ผลต่อ action potential คือ", c:["ไม่เกิด depolarization/AP กระแสประสาทถูกบล็อก จึงไม่รับความรู้สึกเจ็บ","เกิด AP ถี่ขึ้น","เพิ่มการหลั่ง ACh","ทำให้ K⁺ ออกเร็วขึ้นเท่านั้น"], a:0, e:"ถ้า Na⁺ เข้าไม่ได้ ก็ไม่ถึง threshold จึงไม่มี AP สัญญาณปวดจึงส่งไม่ได้"},
+
+  // ---- Conduction velocity ----
+  {q:"จาก R = ρL/A ข้อใดอธิบายได้ว่าเหตุใดแอกซอนเส้นผ่านศูนย์กลางใหญ่จึงนำกระแสเร็วกว่า", c:["A มากขึ้น → ความต้านทานภายใน (R) ต่ำลง → กระแสในเซลล์ไหลไปข้างหน้าได้เร็วขึ้น","A มากขึ้น → R มากขึ้น → เร็วขึ้น","ρ ลดลงตามขนาด","L สั้นลงเมื่อเส้นใหญ่"], a:0, e:"R แปรผกผันกับ A; แอกซอนใหญ่มีพื้นที่ภาคตัดขวางมาก ความต้านทานต่ำ กระแส local circuit จึงไปได้ไกลและเร็ว"},
+  {q:"เปรียบเทียบการนำกระแส 2 แบบ ข้อใดถูกต้องที่สุด", c:["Saltatory เร็วกว่า เพราะ AP เกิดเฉพาะที่ node ส่วนบริเวณไมอีลินทำหน้าที่เป็นฉนวน","Continuous เร็วกว่าเพราะเกิด AP ต่อเนื่องทุกจุด","Saltatory เกิดในเซลล์ที่ไม่มีไมอีลิน","Continuous พบเฉพาะใน node of Ranvier"], a:0, e:"ไมอีลินกันไฟฟ้า AP จึง 'กระโดด' ระหว่าง node ที่มีช่องหนาแน่น ทำให้เร็วกว่าการเกิดต่อเนื่องทุกจุดในเซลล์ที่ไม่มีไมอีลิน"},
+  {q:"ผู้ป่วยที่ปลอกไมอีลินถูกทำลาย (demyelination) จะมีอาการนำกระแสผิดปกติเพราะเหตุใด", c:["สูญเสียฉนวน ทำให้ประจุรั่วที่บริเวณเดิมที่เคยเป็นไมอีลิน การนำแบบกระโดดล้มเหลว","node of Ranvier หายไปทั้งหมดจึงเร็วขึ้น","Na⁺ channel เพิ่มขึ้นทั่วแอกซอน","threshold ลดลงจนยิงเองตลอด"], a:0, e:"ไมอีลินหายทำให้ประจุรั่วออกระหว่าง node การส่งแบบ saltatory เสียไป กระแสจึงช้าลง/บล็อก (เช่นในโรคปลอกประสาทเสื่อม)"},
+
+  // ---- Synapse & integration ----
+  {q:"ที่ปลาย presynaptic การเปิดของช่อง Ca²⁺ (voltage-gated) มีบทบาทสำคัญอย่างไร", c:["Ca²⁺ เข้าเซลล์ไปกระตุ้นให้ vesicle รวมกับเยื่อและปล่อยสารสื่อประสาทแบบ exocytosis","Ca²⁺ สร้าง action potential ที่ postsynaptic","Ca²⁺ สลาย ACh","Ca²⁺ ทำหน้าที่เป็นสารสื่อประสาทข้าม cleft"], a:0, e:"AP ที่มาถึงปลายแอกซอนเปิดช่อง Ca²⁺; Ca²⁺ ที่เข้ามาเป็นตัวกระตุ้นการหลั่งสารสื่อประสาท"},
+  {q:"ถ้ายับยั้งเอนไซม์ที่สลาย ACh ที่ synaptic cleft (เช่นสารในยาฆ่าแมลง) ผลที่คาดว่าจะเกิดคือ", c:["ACh คั่งค้าง กระตุ้น postsynaptic ต่อเนื่อง กล้ามเนื้อชักกระตุกและอาจเป็นอัมพาต","ACh ถูกปล่อยน้อยลง กล้ามเนื้อคลายตัว","threshold สูงขึ้น สงบลง","ไม่มีผลเพราะมี reuptake ทดแทนได้หมด"], a:0, e:"ถ้า acetylcholinesterase ถูกยับยั้ง ACh ไม่ถูกสลาย จึงกระตุ้นซ้ำต่อเนื่อง → ชักกระตุก/กล้ามเนื้อล้าจนหยุดทำงาน"},
+  {q:"Botulinum toxin (ยับยั้งการหลั่ง ACh) เทียบกับสารพิษที่ยับยั้ง AChE จะให้ผลตรงข้ามกันอย่างไรที่กล้ามเนื้อ", c:["Botulinum → กล้ามเนื้ออ่อนแรง/เป็นอัมพาต (ไม่หดตัว); AChE inhibitor → กระตุ้นเกินจนหดเกร็ง","ทั้งสองทำให้กล้ามเนื้อหดเกร็งเหมือนกัน","ทั้งสองทำให้อ่อนแรงเหมือนกัน","Botulinum ทำให้หดเกร็ง; AChE inhibitor ทำให้อ่อนแรง"], a:0, e:"Botulinum ตัดการส่งสัญญาณ → อัมพาตอ่อน; AChE inhibitor ปล่อยให้ ACh ค้าง → กระตุ้นเกินจนเกร็ง (แม้สไลด์ระบุว่าโบทูลินัมทำให้ 'ไม่คลายตัว' ในบางตำรา แต่กลไกจริงที่ NMJ คือขัดขวางการหลั่งจึงอ่อนแรง)"},
+  {q:"เซลล์ประสาท postsynaptic หนึ่งได้รับทั้ง EPSP และ IPSP พร้อมกัน จะเกิด action potential หรือไม่ขึ้นกับสิ่งใด", c:["ผลรวมสุทธิ (summation) ของ EPSP และ IPSP ที่ axon hillock ต้องถึง threshold","จำนวน synapse ทั้งหมดเท่านั้น","ชนิดของไมอีลินเท่านั้น","ความยาวของ dendrite เท่านั้น"], a:0, e:"synaptic integration = ผลบวกเชิงพื้นที่/เวลาของสัญญาณกระตุ้นและยับยั้ง ถ้าสุทธิถึง threshold ที่ axon hillock จึงยิง AP"},
+  {q:"ข้อใดคือความแตกต่างเชิงหน้าที่ที่สำคัญที่สุดของ Electrical synapse เทียบกับ Chemical synapse", c:["Electrical ส่งผ่าน gap junction ได้เร็วและสองทิศ ส่วน Chemical มีดีเลย์และปกติทางเดียว","Electrical ใช้สารสื่อประสาทมากกว่า","Chemical เร็วกว่าเสมอ","Electrical พบเฉพาะในสัตว์เลี้ยงลูกด้วยนม"], a:0, e:"gap junction ให้ไอออนไหลตรงเร็วมากและมักสองทิศ; chemical มี synaptic delay จากการหลั่ง/แพร่/จับ แต่ปรับแต่ง/ขยายสัญญาณได้"},
+
+  // ---- Reflex ----
+  {q:"รีเฟล็กซ์เคาะเข่า (knee-jerk) เป็น monosynaptic ส่วนการยกเท้าหนีตะปูเป็น polysynaptic ข้อใดอธิบายความต่างเชิงวงจรได้ถูก", c:["knee-jerk: sensory → motor โดยตรง; ตะปู: sensory → interneuron → motor จึงมี synapse มากกว่าและช้ากว่าเล็กน้อย","knee-jerk มี interneuron มากกว่า","ตะปูไม่ผ่านไขสันหลัง","ทั้งสองไม่ผ่าน synapse"], a:0, e:"monosynaptic มี 1 ไซแนปส์ (เร็วที่สุด); polysynaptic มี interneuron แทรก จึงประมวลผลซับซ้อนกว่าและใช้เวลามากกว่า"},
+  {q:"เหตุใดการดึงมือออกจากของร้อนจึงเกิดก่อนที่เราจะ 'รู้สึกเจ็บ'", c:["reflex arc สั่งการผ่านไขสันหลังโดยตรง ส่วนสัญญาณเจ็บต้องเดินทางขึ้นไปแปลผลที่สมองซึ่งช้ากว่า","สมองสั่งดึงมือก่อน","ความเจ็บถูกยับยั้งถาวร","กล้ามเนื้อทำงานโดยไม่ใช้เส้นประสาท"], a:0, e:"reflex ตอบสนองที่ไขสันหลังทันที ก่อนที่ข้อมูลจะขึ้นไปถึง cerebrum เพื่อรับรู้ความเจ็บ"},
+
+  // ---- ANS detailed ----
+  {q:"ในระบบซิมพาเทติก preganglionic neuron 'สั้น' และ postganglionic 'ยาว' เพราะเหตุใดเชิงกายวิภาค", c:["ganglion อยู่ใกล้ไขสันหลัง (sympathetic chain) แอกซอนหลัง ganglion จึงต้องยาวไปถึงอวัยวะ","ganglion อยู่ใกล้อวัยวะเป้าหมาย","ไม่มี ganglion","เพราะใช้ ACh ทั้งสองช่วง"], a:0, e:"ปมประสาทซิมพาเทติกอยู่ใกล้ CNS พรีจึงสั้น โพสต์ต้องเดินทางไกลไปยังอวัยวะจึงยาว (ตรงข้ามกับพาราซิมพาเทติก)"},
+  {q:"สารสื่อประสาทของ ANS ข้อใดถูกต้องครบถ้วน", c:["ทั้งสองระบบใช้ ACh ที่ ganglion; ปลายทางซิมพาเทติกส่วนใหญ่ใช้ norepinephrine ส่วนพาราใช้ ACh","ซิมพาเทติกใช้ NE ทั้งสองจุด","พาราใช้ NE ที่อวัยวะ","ทั้งสองใช้ dopamine ที่อวัยวะ"], a:0, e:"preganglionic ทั้งคู่หลั่ง ACh (จับ nicotinic ที่ ganglion); postganglionic ซิมพาเทติกหลั่ง NE (ยกเว้นต่อมเหงื่อใช้ ACh) พาราหลั่ง ACh (muscarinic)"},
+  {q:"ที่ ganglion ของ ANS ตัวรับเป็น nicotinic แต่ที่อวัยวะเป้าหมายของพาราซิมพาเทติกเป็น muscarinic นัยสำคัญคือ", c:["ACh ตัวเดียวกันให้ผลต่างกันได้ ขึ้นกับชนิดตัวรับที่เซลล์เป้าหมาย","nicotinic และ muscarinic เป็น neurotransmitter คนละตัว","muscarinic รับ norepinephrine","ตัวรับไม่มีผลต่อการตอบสนอง"], a:0, e:"ผลของสารสื่อประสาทถูกกำหนดโดย 'ตัวรับ' ของเซลล์เป้าหมาย ไม่ใช่แค่ชนิดสาร — ACh จึงให้ผลต่างกันที่ ganglion กับที่อวัยวะ"},
+  {q:"ขณะเผชิญเหตุตกใจ (fight or flight) ชุดการตอบสนองใดสอดคล้องกับซิมพาเทติกทั้งหมด", c:["หัวใจเต้นเร็วขึ้น รูม่านตาขยาย หลอดลมคลายตัว การทำงานลำไส้ลดลง","หัวใจเต้นช้าลง รูม่านตาหด ลำไส้ทำงานเพิ่ม","น้ำลายใส หลอดลมหดตัว","กระเพาะปัสสาวะหดขับปัสสาวะ"], a:0, e:"ซิมพาเทติกเตรียมสู้/หนี: หัวใจแรง+เร็ว, ม่านตาขยายรับแสง, หลอดลมคลายเพิ่มออกซิเจน, ลดการย่อยอาหาร"},
+  {q:"เหตุใดการกระตุ้นซิมพาเทติกทำให้ 'กระเพาะปัสสาวะคลายตัว (ไม่ขับปัสสาวะ)' แต่พาราซิมพาเทติกทำตรงข้าม", c:["สองระบบทำงานตรงข้ามกัน (antagonist) เพื่อควบคุมอวัยวะให้สมดุลตามสถานการณ์","ทั้งสองทำให้คลายตัวเหมือนกัน","กระเพาะปัสสาวะไม่ได้รับ ANS","ซิมพาเทติกไม่มีผลต่อกระเพาะปัสสาวะ"], a:0, e:"ANS สองสายมักออกฤทธิ์ตรงข้าม ช่วงตึงเครียดไม่ควรเสียเวลาขับปัสสาวะ ระบบจึง 'กัก' ไว้; ช่วงพักพาราจึงสั่งขับ"},
+
+  // ---- Neurotransmitter / disease ----
+  {q:"ผู้ป่วยพาร์กินสันได้รับ 'L-dopa' แทนการให้ dopamine โดยตรง เพราะเหตุผลใดสมเหตุสมผลที่สุด", c:["L-dopa เป็นสารตั้งต้นที่ผ่านเข้าสมองได้และถูกเปลี่ยนเป็น dopamine ภายใน ต่างจาก dopamine ที่ผ่านเข้าได้ยาก","dopamine ราคาสูงกว่า","L-dopa ยับยั้ง ACh","L-dopa เพิ่ม serotonin"], a:0, e:"เหตุผลเชิงเภสัชคือความสามารถผ่านเข้าสมองได้; สไลด์ระบุใช้ 'ยา dopa' เพื่อเพิ่มการออกฤทธิ์ของ dopamine ในสมอง"},
+  {q:"อัลไซเมอร์และพาร์กินสันต่างกันที่สารสื่อประสาท/พยาธิสภาพหลักอย่างไร", c:["อัลไซเมอร์: สะสม amyloid/Tau และ ACh เกี่ยวความจำลดลง; พาร์กินสัน: เซลล์สร้าง dopamine ตาย ควบคุมการเคลื่อนไหวเสีย","ทั้งสองเกิดจาก dopamine ตายเหมือนกัน","อัลไซเมอร์เกิดจาก dopamine, พาร์กินสันจาก ACh","ทั้งสองเกิดจากน้ำคั่งในสมอง"], a:0, e:"อาการหลักจึงต่างกัน: อัลไซเมอร์เด่นด้านความจำ; พาร์กินสันเด่นด้านการเคลื่อนไหว (สั่น เกร็ง เคลื่อนช้า)"},
+  {q:"GABA เป็น inhibitory neurotransmitter หากยากลุ่มหนึ่งเสริมฤทธิ์ GABA ผลที่คาดว่าจะเกิดคือ", c:["ลดการทำงานของเซลล์ประสาท ทำให้สงบ/ง่วง (คล้ายยาระงับประสาท)","กระตุ้นให้ตื่นตัวมากขึ้น","เพิ่มการหลั่ง ACh ที่กล้ามเนื้อ","เพิ่มความเจ็บปวด"], a:0, e:"GABA ยับยั้งการส่งกระแสประสาท การเสริมฤทธิ์จึงกดการทำงานของ CNS ทำให้สงบ/ง่วง"},
+
+  // ---- Phylogeny / comparative ----
+  {q:"ข้อใดเกี่ยวกับการกำเนิดเซลล์ประสาทในสายวิวัฒนาการ 'ไม่ถูกต้อง'", c:["Porifera มีร่างแหประสาทแบบง่ายเป็นกลุ่มแรก","Cnidaria มีร่างแหประสาท ไม่มีกลุ่มเซลล์ที่ควบคุมเซลล์อื่น","Placozoa จัดเป็นกลุ่มที่ไม่มีเซลล์ประสาท","Ctenophora มีระบบประสาทแบบร่างแหและ nets & 'brain'"], a:0, e:"ผิด: Porifera 'ไม่มี' เซลล์ประสาท — เซลล์แต่ละเซลล์รับรู้เองแต่ไม่มีร่างแหประสาท"},
+  {q:"เหตุใดการที่ Ctenophora อาจมี 'จุดกำเนิดเซลล์ประสาทอิสระ' จึงน่าสนใจเชิงวิวัฒนาการ", c:["ชี้ว่าเซลล์ประสาทอาจวิวัฒน์ขึ้นมากกว่าหนึ่งครั้ง ไม่ได้มาจากบรรพบุรุษเดียวเสมอไป","ยืนยันว่าเซลล์ประสาทเกิดครั้งเดียว","พิสูจน์ว่า Ctenophora ไม่มีเซลล์ประสาท","แสดงว่า Ctenophora เป็นบรรพบุรุษของสัตว์มีกระดูกสันหลัง"], a:0, e:"สมมติฐาน independent origin ของ neuron ท้าทายแนวคิดว่าระบบประสาทมีต้นกำเนิดเดียว"},
+  {q:"เปรียบเทียบตำแหน่ง nerve cord: ข้อใดถูกต้อง", c:["สัตว์ไม่มีกระดูกสันหลัง (annelid/arthropod) มี ventral cord ส่วน chordate มี dorsal cord","ทั้งสองกลุ่มมี dorsal cord","chordate มี ventral cord","annelid ไม่มี nerve cord"], a:0, e:"protostome หลายกลุ่มมี ventral nerve cord ใต้ทางเดินอาหาร; chordate มี dorsal nerve cord เหนือ notochord"},
+  {q:"ดาวทะเล (Echinodermata) มี central nerve ring และ radial nerve ข้อสรุปด้านหน้าที่ใดสมเหตุสมผล", c:["โครงสร้างแบบรัศมีช่วยให้แยกควบคุมปาก/แขนได้ และปลาย radial nerve บางชนิดพัฒนาเป็น eyespot","มีสมองรวมศูนย์ควบคุมทั้งตัว","ควบคุมเฉพาะการหายใจ","ไม่สามารถรับแสงได้เลย"], a:0, e:"สมมาตรรัศมีสอดคล้องกับระบบประสาทแบบวงแหวน+รัศมี แยกการควบคุมแต่ละแขนได้ และปลาย radial nerve เป็น ocellus รับแสง"},
+
+  // ---- Embryology ----
+  {q:"ลำดับเหตุการณ์ neurulation ที่ถูกต้องคือ", c:["neural plate → neural fold/groove → neural tube → neuropore ปิด (~4 สัปดาห์)","neural tube → neural plate → neuropore","neural crest → neural plate → neural tube","neuropore → neural groove → neural plate"], a:0, e:"ectoderm หนาเป็น plate → ยกขอบเป็น fold + ร่อง groove → เชื่อมเป็น tube → neuropore ปิดราวสัปดาห์ที่ 4"},
+  {q:"บทบาทของ noggin/chordin ต่อ BMP-4 ในการสร้างระบบประสาทคือ", c:["ยับยั้ง BMP-4 ทำให้ ectoderm กลายเป็นเนื้อเยื่อประสาทแทนผิวหนัง","กระตุ้น BMP-4 ให้สร้างผิวหนัง","สลาย notochord","เปลี่ยน mesoderm เป็น ectoderm"], a:0, e:"noggin/chordin จาก notochord ยับยั้ง BMP-4 (ที่ปกติผลักให้เป็นผิวหนัง) เนื้อเยื่อจึงเดินทางสู่ชะตากรรมประสาท"},
+  {q:"การจับคู่ embryonic vesicle → โครงสร้างผู้ใหญ่ ข้อใด 'ผิด'", c:["Mesencephalon → Cerebellum","Telencephalon → Cerebrum","Diencephalon → Thalamus/Hypothalamus","Myelencephalon → Medulla oblongata"], a:0, e:"ผิด: Mesencephalon → Midbrain; ส่วน cerebellum มาจาก Metencephalon"},
+
+  // ---- CNS structures & clinical reasoning ----
+  {q:"เหตุผลที่เจาะน้ำไขสันหลัง (lumbar puncture) ทำที่ระดับ L3–L4 ในผู้ใหญ่ คือ", c:["ไขสันหลังสิ้นสุดประมาณ L2 การเจาะต่ำกว่านั้นจึงหลีกเลี่ยงการทิ่มไขสันหลังโดยตรง","ไขสันหลังยาวถึง S3 จึงต้องเจาะสูง","L3-L4 เป็นที่เดียวที่มี CSF","เพื่อเจาะโดน dorsal root ganglion"], a:0, e:"adult spinal cord ยาวถึง ~L2 การเจาะที่ L3-L4 จึงเข้าถึง CSF ใน subarachnoid space ได้อย่างปลอดภัย"},
+  {q:"ผู้ป่วยเสีย Cranial nerve คู่ที่ 5 และ 7 คาดว่าจะแสดงอาการใด (อิงตำแหน่งที่พอนส์)", c:["ชาบริเวณใบหน้า/เคี้ยวลำบาก (CN5) ร่วมกับกล้ามเนื้อใบหน้าอ่อนแรง/แสดงสีหน้าไม่ได้ (CN7)","สูญเสียการมองเห็นทั้งสองตา","กลืนไม่ได้และหัวใจหยุด","สูญเสียการดมกลิ่น"], a:0, e:"CN5 (trigeminal) = ความรู้สึกใบหน้า+เคี้ยว; CN7 (facial) = กล้ามเนื้อใบหน้า/แสดงสีหน้า ทั้งคู่อยู่ระดับพอนส์"},
+  {q:"หากก้านสมองส่วน Medulla oblongata ได้รับความเสียหายรุนแรง อันตรายถึงชีวิตเพราะเหตุใด", c:["เป็นศูนย์ควบคุมการหายใจและการเต้นของหัวใจแบบอัตโนวัติ","เป็นศูนย์ความจำระยะยาว","ควบคุมการมองเห็นเท่านั้น","สร้าง CSF ทั้งหมด"], a:0, e:"medulla คุมการหายใจ (ร่วม pons) และการเต้นของหัวใจ ความเสียหายจึงกระทบระบบพยุงชีพ"},
+  {q:"ความเสียหายเฉพาะ Cerebellum น่าจะทำให้เกิดอาการใดมากที่สุด", c:["เคลื่อนไหวไม่ราบรื่น เสียการทรงตัวและการกะระยะ (ataxia)","สูญเสียความจำระยะสั้นทั้งหมด","อัมพาตครึ่งซีกทันที","ตาบอด"], a:0, e:"cerebellum ปรับการเคลื่อนไหวให้ราบรื่น เที่ยงตรง เสียหายจึงเกิดการเคลื่อนไหวสะเปะสะปะ เสียสมดุล"},
+  {q:"บทบาทของ hypothalamus ในระบบลิมบิกที่เชื่อมกับ 'ระบบต่อมไร้ท่อ' โดดเด่นอย่างไร", c:["ควบคุม homeostasis และสร้างฮอร์โมนประสาทควบคุมต่อมใต้สมองส่วนหน้า","แปลงความจำระยะสั้นเป็นระยะยาว","ประมวลผลความกลัวโดยตรง","สร้าง CSF"], a:0, e:"hypothalamus เป็นสะพานระหว่างระบบประสาทและต่อมไร้ท่อ ควบคุมอุณหภูมิ ความหิว การนอน และต่อมใต้สมอง"},
+  {q:"เนื้อสีเทาของสมอง (cortex ด้านนอก) เทียบกับไขสันหลัง (สีเทาอยู่ด้านใน) การกระจายตัวนี้บอกอะไร", c:["ตัวเซลล์ประสาท (grey) จัดวางต่างตำแหน่งกัน: สมองอยู่นอก ไขสันหลังอยู่ใน ส่วน white matter สลับกัน","ทั้งสองมี grey อยู่นอกเหมือนกัน","ไขสันหลังไม่มี white matter","สมองไม่มี grey matter"], a:0, e:"ในสมอง cortex (grey) อยู่ผิวนอก; ในไขสันหลัง grey matter อยู่แกนกลาง (รูปผีเสื้อ) ล้อมด้วย white matter"},
+
+  // ---- Neuron type reasoning ----
+  {q:"เซลล์ประสาทรับความรู้สึกที่ dorsal root ganglion เป็น pseudounipolar ข้อใดอธิบายข้อได้เปรียบเชิงหน้าที่", c:["สัญญาณจากปลายรับความรู้สึกวิ่งผ่าน axon เข้าสู่ไขสันหลังได้โดยไม่ต้องผ่านตัวเซลล์ก่อน จึงเร็ว","มี dendrite จำนวนมากช่วยประมวลผล","ไม่มี axon จึงไม่ต้องส่งไกล","เป็น motor neuron ที่สั่งกล้ามเนื้อ"], a:0, e:"รูปแบบ pseudounipolar ให้กระแสวิ่งตรงจากปลายรับความรู้สึกเข้าสู่ CNS โดยไม่ต้องอ้อมผ่าน soma"},
+  {q:"เหตุใด motor neuron และ interneuron จึงเป็น multipolar (หลาย dendrite)", c:["ต้องรวมสัญญาณเข้าจากหลายแหล่งเพื่อทำ synaptic integration ก่อนตัดสินใจยิง AP","เพราะไม่ต้องรับข้อมูล","เพราะไม่มี axon","เพราะเป็นเซลล์รับกลิ่น"], a:0, e:"dendrite จำนวนมากช่วยรับ input หลายทางเพื่อประมวลผลรวม (summation) เหมาะกับบทบาทประสานงาน/สั่งการ"},
+
+  // ---- Perception & endocrine link ----
+  {q:"ตามแนวคิด 'ในบางกรณีการตอบสนองเป็นการทำงานร่วมของระบบประสาทและต่อมไร้ท่อ' ข้อใดยกตัวอย่างได้ถูกต้อง", c:["ประสาทคุมการตอบสนองเร็ว (วิ่งหนี กล้ามเนื้อหด) ต่อมไร้ท่อคุมที่ช้าแต่นาน (หัวใจยังเต้นแรงแม้พ้นภัย)","ทั้งสองระบบให้ผลเร็วและสั้นเท่ากัน","ต่อมไร้ท่อคุมการหดกล้ามเนื้อทันที","ประสาทคุมเฉพาะการตอบสนองที่นานเท่านั้น"], a:0, e:"ประสาท = ตอบสนองเร็ว/สั้น; ต่อมไร้ท่อ (เช่น adrenaline) = ช้ากว่าแต่ผลอยู่นาน จึงหัวใจยังเต้นแรงต่อแม้พ้นภัย"},
+  {q:"เส้นทางการรับ-สั่งการที่ถูกต้องตามแผนภาพคือ", c:["สิ่งเร้า → หน่วยรับความรู้สึก → หน่วยแปล/สั่งการ → หน่วยปฏิบัติงาน → การตอบสนอง","สิ่งเร้า → หน่วยปฏิบัติงาน → สมอง → การตอบสนอง","หน่วยปฏิบัติงาน → สิ่งเร้า → การตอบสนอง","การตอบสนอง → สิ่งเร้า → หน่วยรับความรู้สึก"], a:0, e:"ลำดับ: รับสิ่งเร้า → receptor → ประมวล/สั่งการ → effector → ตอบสนอง"},
+
+  // ---- CSF / ventricle ----
+  {q:"เหตุใดใน hydrocephalus การคั่งของ CSF จึงเป็นอันตราย", c:["ความดันจากน้ำที่คั่งเพิ่มขึ้นกดเนื้อสมอง ทำให้เนื้อเยื่อประสาทเสียหาย","CSF กลายเป็นเลือด","CSF สลายไมอีลิน","CSF ทำให้ dopamine เพิ่ม"], a:0, e:"เมื่อการไหลเวียน/ดูดกลับ CSF ผิดปกติ น้ำคั่งเพิ่มความดันในกะโหลก กดเบียดเนื้อสมอง"},
+  {q:"CSF คล้ายพลาสมาแต่ 'ปกติไม่พบ RBC และมีโปรตีนต่ำกว่า' การพบ RBC/โปรตีนสูงผิดปกติในน้ำไขสันหลังบ่งชี้อะไรได้", c:["อาจมีเลือดออกหรือการอักเสบ/ติดเชื้อในระบบประสาทส่วนกลาง","เป็นเรื่องปกติทุกคน","แสดงว่า CSF ถูกสร้างมากเกินไปเท่านั้น","ยืนยันว่าเป็นพลาสมาปกติ"], a:0, e:"เนื่องจากปกติ CSF แทบไม่มี RBC และโปรตีนต่ำ การพบสิ่งเหล่านี้จึงชี้ความผิดปกติ (เลือดออก/อักเสบ)"},
+
+  // ---- Synaptic integration extra ----
+  {q:"Temporal summation แตกต่างจาก Spatial summation อย่างไร", c:["Temporal = สัญญาณจากไซแนปส์เดียวกันมาถี่ในเวลาสั้น ๆ จนสะสม; Spatial = สัญญาณจากหลายไซแนปส์พร้อมกัน","Temporal มาจากหลายไซแนปส์พร้อมกัน","Spatial เกิดจากไซแนปส์เดียว","ทั้งสองไม่เกี่ยวกับ threshold"], a:0, e:"temporal = รวมตามเวลา (ยิงถี่จากจุดเดิม); spatial = รวมตามตำแหน่ง (หลายจุดพร้อมกัน) ทั้งคู่ช่วยให้ถึง threshold"},
+  {q:"Feedback inhibition ในวงจรประสาทมีประโยชน์เชิงการควบคุมอย่างไร", c:["เซลล์ที่ถูกกระตุ้นย้อนไปยับยั้งตัวเอง/ต้นทาง ป้องกันการยิงมากเกินและปรับความคมของสัญญาณ","เพิ่มการยิงให้มากขึ้นเรื่อย ๆ","ตัดการเชื่อมต่อทั้งหมด","เปลี่ยน AP เป็น EPSP เสมอ"], a:0, e:"วงจรยับยั้งย้อนกลับช่วยจำกัดการกระตุ้นเกิน (self-limiting) และเพิ่มความแม่นยำของสัญญาณ"},
+
+  // ---- All-or-none stimulus coding ----
+  {q:"ถ้า AP เป็นแบบ all-or-none (ขนาดคงที่) แล้วระบบประสาทเข้ารหัส 'ความแรงของสิ่งเร้า' ได้อย่างไร", c:["ด้วยความถี่ของ AP (ยิงถี่ขึ้น) และจำนวนเซลล์ที่ถูกกระตุ้น ไม่ใช่ด้วยขนาดของ AP","ด้วยขนาด AP ที่สูงขึ้น","ด้วยการเปลี่ยนทิศทาง AP","ด้วยการลด threshold ถาวร"], a:0, e:"ขนาด AP คงที่ ระบบจึงเข้ารหัสความแรงด้วยอัตราการยิง (frequency coding) และจำนวนหน่วยรับที่ทำงาน"}
+];
+
+let order=[], idx=0, score=0, answered=false;
+const $=id=>document.getElementById(id);
+const total=QUESTIONS.length;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function start(){
+  order=shuffle([...Array(total).keys()]); idx=0; score=0; answered=false;
+  $("quizCard").style.display="block"; $("resultCard").classList.remove("show"); render();
+}
+function render(){
+  answered=false;
+  const q=QUESTIONS[order[idx]];
+  $("counter").textContent=`ข้อ ${idx+1} / ${total}`;
+  $("scoreLive").textContent=`คะแนน ${score}`;
+  $("progFill").style.width=`${(idx/total)*100}%`;
+  $("qnum").textContent=`คำถามที่ ${idx+1}`;
+  $("qText").textContent=q.q;
+  const opts=q.c.map((t,i)=>({t,correct:i===q.a})); shuffle(opts);
+  const box=$("choices"); box.innerHTML="";
+  const L=["ก","ข","ค","ง"];
+  opts.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.className="choice";
+    b.innerHTML=`<span class="tag">${L[i]}</span><span>${o.t}</span>`;
+    b.onclick=()=>pick(b,o.correct,box);
+    box.appendChild(b);
+  });
+  const ex=$("explain"); ex.classList.remove("show"); ex.innerHTML="";
+  $("nextBtn").disabled=true;
+  $("nextBtn").textContent=(idx===total-1)?"ดูผลคะแนน 🏁":"ถัดไป →";
+}
+function pick(btn,ok,box){
+  if(answered)return; answered=true;
+  const kids=box.children;
+  for(let i=0;i<kids.length;i++)kids[i].disabled=true;
+  const correctText=QUESTIONS[order[idx]].c[QUESTIONS[order[idx]].a];
+  if(ok){btn.classList.add("correct"); score++;}
+  else{
+    btn.classList.add("wrong");
+    for(let i=0;i<kids.length;i++){
+      if(kids[i].querySelector("span:last-child").textContent===correctText)kids[i].classList.add("correct");
+    }
+  }
+  $("scoreLive").textContent=`คะแนน ${score}`;
+  const q=QUESTIONS[order[idx]];
+  if(q.e){const ex=$("explain"); ex.innerHTML=`<b>💡 เหตุผล:</b> ${q.e}`; ex.classList.add("show");}
+  $("nextBtn").disabled=false;
+}
+$("nextBtn").onclick=function(){
+  if(!answered)return;
+  if(idx<total-1){idx++; render();} else finish();
+};
+function finish(){
+  $("quizCard").style.display="none";
+  const pct=Math.round((score/total)*100);
+  $("finalScore").textContent=score;
+  let medal="🎯",msg="";
+  if(pct>=90){medal="🏆";msg="สุดยอด! ระดับสอบแข่งขันได้เลย";}
+  else if(pct>=75){medal="🌟";msg="เก่งมาก เกินระดับห้องเรียนไปแล้ว";}
+  else if(pct>=50){medal="👍";msg="ผ่านโจทย์ยากมาได้ครึ่ง ทบทวนจุดพลาดอีกนิด";}
+  else{medal="📚";msg="ชุดนี้ยากจริง ลองทบทวนกลไกเชิงเหตุผลแล้วมาใหม่";}
+  $("medal").textContent=medal;
+  $("finalMsg").textContent=`${msg} (${pct}%)`;
+  $("resultCard").classList.add("show");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("restartBtn").onclick=start;
+start();
+</script>
+</body>
+</html>
