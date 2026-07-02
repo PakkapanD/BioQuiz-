@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ควิซระบบประสาท (ชุดช้อยหลอก)</title>
+<style>
+  :root{
+    --bg:#eef4fb; --card:#ffffff; --card2:#f6f9fc; --primary:#4a9fe0; --primary-d:#2f7bbd;
+    --ok:#2e9e6b; --ok-bg:#e4f6ec; --no:#d9534f; --no-bg:#fbe7e6;
+    --text:#233; --muted:#6b7a88; --line:#e2e8ef;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text);
+    font-family:"Sarabun","Segoe UI Historic","Tahoma","Segoe UI",system-ui,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:720px; margin:0 auto; padding:16px 14px 48px;}
+  header{text-align:center; margin:10px 0 18px;}
+  header h1{font-size:1.5rem; margin:0 0 4px; color:var(--primary-d);}
+  header .badge{display:inline-block; background:#e7f0fa; color:var(--primary-d); font-size:.75rem; font-weight:700;
+    padding:3px 12px; border-radius:99px; margin-top:2px;}
+  header p{margin:6px 0 0; color:var(--muted); font-size:.9rem;}
+  .card{background:var(--card); border-radius:16px; padding:20px 18px;
+    box-shadow:0 6px 20px rgba(60,90,130,.10); border:1px solid var(--line);}
+  .bar-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:.85rem; color:var(--muted);}
+  .progress{height:8px; background:#dfe8f2; border-radius:99px; overflow:hidden; margin-bottom:18px;}
+  .progress > i{display:block; height:100%; width:0; background:var(--primary); transition:width .3s;}
+  .qnum{font-size:.82rem; color:var(--primary-d); font-weight:700;}
+  .question{font-size:1.12rem; font-weight:600; margin:2px 0 16px;}
+  .choices{display:flex; flex-direction:column; gap:10px;}
+  .choice{display:flex; align-items:flex-start; gap:10px; width:100%; text-align:left;
+    padding:13px 14px; border-radius:12px; cursor:pointer; background:var(--card2);
+    border:2px solid var(--line); color:var(--text); font-size:1rem; font-family:inherit; transition:.15s;}
+  .choice:hover:not(:disabled){border-color:var(--primary); background:#eef6fe;}
+  .choice .tag{flex:0 0 26px; height:26px; border-radius:50%; background:#dfe8f2; color:var(--primary-d);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; margin-top:1px;}
+  .choice:disabled{cursor:default;}
+  .choice.correct{background:var(--ok-bg); border-color:var(--ok); color:#1c6e49;}
+  .choice.correct .tag{background:var(--ok); color:#fff;}
+  .choice.wrong{background:var(--no-bg); border-color:var(--no); color:#a33c39;}
+  .choice.wrong .tag{background:var(--no); color:#fff;}
+  .explain{margin-top:16px; padding:12px 14px; border-radius:12px; font-size:.94rem;
+    background:#f2f7fc; border-left:4px solid var(--primary); display:none;}
+  .explain.show{display:block;}
+  .explain b{color:var(--primary-d);}
+  .actions{margin-top:18px; display:flex; gap:10px;}
+  .btn{flex:1; padding:13px; border:none; border-radius:12px; cursor:pointer; font-size:1.02rem;
+    font-weight:700; font-family:inherit; color:#fff; background:var(--primary); transition:.15s;}
+  .btn:hover{background:var(--primary-d);}
+  .btn:disabled{opacity:.4; cursor:default;}
+  .result{text-align:center; display:none;}
+  .result.show{display:block;}
+  .score-big{font-size:3rem; font-weight:800; color:var(--primary-d); margin:6px 0;}
+  .score-sub{color:var(--muted); margin-bottom:6px;}
+  .medal{font-size:2.6rem;}
+  .msg{font-size:1.05rem; margin:8px 0 20px; font-weight:600;}
+  footer{text-align:center; margin-top:20px; color:var(--muted); font-size:.8rem;}
+  #noJs{background:#fbe7e6; color:#a33c39; padding:14px; border-radius:12px; text-align:center; margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🧠 ควิซระบบประสาท</h1>
+    <div class="badge">ชุดใหม่ · ช้อยหลอก · เดายาก</div>
+    <p>48 ข้อ · ทุกตัวเลือกยาวใกล้เคียงกัน</p>
+  </header>
+
+  <noscript>
+    <div id="noJs">ต้องเปิดในเบราว์เซอร์ Safari/Chrome (บน iPad: กดค้างที่ไฟล์ → แชร์ → เปิดใน Safari — อย่าดูผ่านหน้าพรีวิว)</div>
+  </noscript>
+
+  <div class="card" id="quizCard">
+    <div class="bar-row"><span id="counter">ข้อ 1 / 48</span><span id="scoreLive">คะแนน 0</span></div>
+    <div class="progress"><i id="progFill"></i></div>
+    <div class="qnum" id="qnum">คำถามที่ 1</div>
+    <div class="question" id="qText">...</div>
+    <div class="choices" id="choices"></div>
+    <div class="explain" id="explain"></div>
+    <div class="actions"><button class="btn" id="nextBtn" disabled>ถัดไป →</button></div>
+  </div>
+
+  <div class="card result" id="resultCard">
+    <div class="medal" id="medal">🎉</div>
+    <div class="score-sub">คะแนนของคุณ</div>
+    <div class="score-big"><span id="finalScore">0</span> / 48</div>
+    <div class="msg" id="finalMsg"></div>
+    <div class="actions"><button class="btn" id="restartBtn">เล่นใหม่อีกครั้ง</button></div>
+  </div>
+
+  <footer>สื่อการเรียน — ระบบประสาท ม.ปลาย</footer>
+</div>
+
+<script>
+/* ทุกข้อออกแบบให้ตัวเลือกยาวใกล้เคียงกัน คำตอบไม่ใช่ช้อยที่ยาวที่สุด */
+const QUESTIONS = [
+  {q:"ส่วนใดของเซลล์ประสาททำหน้าที่รับกระแสประสาทเข้าสู่ตัวเซลล์", c:["เดนไดรต์","แอกซอน","แอกซอนฮิลล็อก","ปลายไซแนปส์"], a:0, e:"dendrite รับสัญญาณเข้า axon ส่งสัญญาณออก"},
+  {q:"เซลล์ใดสร้างเยื่อไมอีลินในระบบประสาทรอบนอก (PNS)", c:["ชวานน์เซลล์","โอลิโกเดนโดรไซต์","แอสโทรไซต์","ไมโครเกลีย"], a:0, e:"PNS ใช้ Schwann cell ส่วน CNS ใช้ oligodendrocyte"},
+  {q:"เซลล์ใดสร้างเยื่อไมอีลินในระบบประสาทส่วนกลาง (CNS)", c:["โอลิโกเดนโดรไซต์","ชวานน์เซลล์","แซทเทลไลต์เซลล์","เอเพนไดมัลเซลล์"], a:0, e:"เป็นคู่ที่มักสับสน: CNS→oligodendrocyte, PNS→Schwann"},
+  {q:"ไฟลัมแรกในสายวิวัฒนาการที่พบเซลล์ประสาทคือกลุ่มใด", c:["ไนดาเรีย (Cnidaria)","พอริเฟอรา (Porifera)","แพลทีเฮลมินเทส","พลาโคซัว (Placozoa)"], a:0, e:"Cnidaria มีร่างแหประสาทเป็นกลุ่มแรก ส่วน Porifera/Placozoa ยังไม่มีเซลล์ประสาท"},
+  {q:"สัตว์กลุ่มใดต่อไปนี้ที่ยังไม่มีเซลล์ประสาท", c:["ฟองน้ำ (Porifera)","ไฮดรา (Cnidaria)","หวีวุ้น (Ctenophora)","พยาธิตัวกลม (Nematoda)"], a:0, e:"ฟองน้ำและ Placozoa ยังไม่มีเซลล์ประสาท ที่เหลือมีแล้ว"},
+  {q:"ระบบประสาทแบบขั้นบันได (Ladder type) พบในไฟลัมใด", c:["แพลทีเฮลมินเทส","แอนเนลิดา","มอลลัสกา","เอไคโนเดอร์มาตา"], a:0, e:"หนอนตัวแบนมี nerve cord 2 เส้นเชื่อมด้วย nerve ring เป็นระยะ"},
+  {q:"โครงสร้างที่ควบคุมการพัดโบกของซีเลียในพารามีเซียมคืออะไร", c:["เส้นใยประสานงาน","ร่างแหประสาท","วงแหวนประสาท","ปมประสาท"], a:0, e:"พารามีเซียมไม่มีระบบประสาท แต่มี coordinating fiber เชื่อม basal body"},
+  {q:"ศักย์เยื่อเซลล์ระยะพัก (resting potential) มีค่าประมาณเท่าใด", c:["-70 มิลลิโวลต์","-50 มิลลิโวลต์","+40 มิลลิโวลต์","-90 มิลลิโวลต์"], a:0, e:"ภายในเซลล์เป็นลบเทียบภายนอก ~ -70 mV"},
+  {q:"ในระยะดีโพลาไรเซชัน ไอออนใดไหลเข้าสู่เซลล์เป็นหลัก", c:["โซเดียม (Na⁺)","โพแทสเซียม (K⁺)","คลอไรด์ (Cl⁻)","แคลเซียม (Ca²⁺)"], a:0, e:"Na⁺ ไหลเข้าทำให้ภายในบวกขึ้น (depolarize)"},
+  {q:"ในระยะรีโพลาไรเซชัน ไอออนใดไหลออกนอกเซลล์เป็นหลัก", c:["โพแทสเซียม (K⁺)","โซเดียม (Na⁺)","แคลเซียม (Ca²⁺)","คลอไรด์ (Cl⁻)"], a:0, e:"K⁺ ไหลออกทำให้ภายในกลับเป็นลบ (repolarize)"},
+  {q:"ค่าความต่างศักย์จำเพาะ (threshold) ที่เริ่มเกิด action potential อยู่ราวใด", c:["-55 มิลลิโวลต์","-70 มิลลิโวลต์","+30 มิลลิโวลต์","-90 มิลลิโวลต์"], a:0, e:"threshold ประมาณ -50 ถึง -55 mV; -70 คือระยะพัก"},
+  {q:"โครงสร้างเอ็มบริโอใดพัฒนาไปเป็นสมองและไขสันหลัง", c:["นิวรัลทิวบ์ (neural tube)","นิวรัลเครสต์ (neural crest)","โนโตคอร์ด (notochord)","นิวรัลเพลต (neural plate)"], a:0, e:"neural fold เชื่อมกันเป็น neural tube → สมอง+ไขสันหลัง"},
+  {q:"ระบบประสาทพัฒนามาจากเนื้อเยื่อเอ็มบริโอชั้นใด", c:["เอกโทเดิร์ม (ectoderm)","มีโซเดิร์ม (mesoderm)","เอนโดเดิร์ม (endoderm)","โนโตคอร์ด (notochord)"], a:0, e:"ectoderm เหนือ notochord หนาตัวเป็น neural plate"},
+  {q:"เนื้อเยื่อเอ็มบริโอใดพัฒนาไปเป็นกระดูกสันหลัง", c:["มีโซเดิร์ม (mesoderm)","เอกโทเดิร์ม (ectoderm)","เอนโดเดิร์ม (endoderm)","นิวรัลเครสต์"], a:0, e:"กระดูกสันหลังมาจาก mesoderm ต่างจากระบบประสาทที่มาจาก ectoderm"},
+  {q:"โมเลกุลคู่ใดที่สร้างจาก notochord เพื่อยับยั้งการทำงานของ BMP-4", c:["noggin และ chordin","BMP-4 และ noggin","chordin และ notochord","mesoderm และ ectoderm"], a:0, e:"noggin/chordin ยับยั้ง BMP-4 ทำให้ ectoderm เป็นเนื้อเยื่อประสาทแทนผิวหนัง"},
+  {q:"neuropore ทั้งสองข้างจะปิดลงเมื่อเอ็มบริโอมีอายุประมาณเท่าใด", c:["4 สัปดาห์","8 สัปดาห์","2 สัปดาห์","12 สัปดาห์"], a:0, e:"neuropore ปิดราวสัปดาห์ที่ 4"},
+  {q:"ปลามีการเจริญของสมองส่วนใดมากกว่าสัตว์กลุ่มอื่น", c:["สมองส่วนกลาง","สมองส่วนหน้า","สมองส่วนหลัง","เมดัลลาออบลองกาตา"], a:0, e:"ปลามี optic lobe (สมองส่วนกลาง) เจริญเด่น"},
+  {q:"สัตว์เลี้ยงลูกด้วยนมมีการเจริญของสมองส่วนใดมากที่สุด", c:["สมองส่วนหน้า","สมองส่วนกลาง","สมองส่วนหลัง","พอนส์"], a:0, e:"mammal มี cerebrum (สมองส่วนหน้า) เจริญที่สุด"},
+  {q:"โนดออฟรานเวียร์ (Node of Ranvier) คือบริเวณใด", c:["ช่องว่างระหว่างเยื่อไมอีลิน","รอยต่อตัวเซลล์กับแอกซอน","บริเวณปล่อยสารสื่อประสาท","จุดรับกระแสเข้าสู่เดนไดรต์"], a:0, e:"node เป็นช่องว่างระหว่างไมอีลิน ใช้นำกระแสแบบกระโดด"},
+  {q:"Nissl bodies ในตัวเซลล์ประสาทคือออร์แกเนลล์ใด", c:["เอนโดพลาสมิกเรติคูลัมแบบขรุขระ (rER)","กอลจิบอดี (Golgi)","ไมโทคอนเดรีย","ไลโซโซม"], a:0, e:"Nissl bodies = rER ทำหน้าที่สังเคราะห์โปรตีน"},
+  {q:"เซลล์ประสาทขั้วเดียว (Unipolar neuron) มีเดนไดรต์และแอกซอนอย่างละกี่เส้น", c:["0 เดนไดรต์ 1 แอกซอน","1 เดนไดรต์ 1 แอกซอน","2 เดนไดรต์ 1 แอกซอน","มากกว่า 1 เดนไดรต์ 1 แอกซอน"], a:0, e:"unipolar: 0 dendrite, 1 axon; bipolar/pseudounipolar: 1 dendrite,1 axon"},
+  {q:"เซลล์ประสาทที่รากบนของไขสันหลัง (dorsal root ganglion) เป็นชนิดใด", c:["ขั้วเดียวเทียม (pseudounipolar)","สองขั้ว (bipolar)","หลายขั้ว (multipolar)","ขั้วเดียว (unipolar)"], a:0, e:"เซลล์รับความรู้สึกที่ dorsal root ganglion เป็น pseudounipolar"},
+  {q:"Multipolar neuron โดยทั่วไปทำหน้าที่เป็นเซลล์ประสาทชนิดใด", c:["ประสานงานหรือสั่งการ","รับความรู้สึกเท่านั้น","เซลล์รับกลิ่นเท่านั้น","เซลล์หลั่งฮอร์โมน"], a:0, e:"multipolar พบเป็น association/motor neuron ใน CNS และ ANS"},
+  {q:"ปมประสาท (ganglion) ตามนิยามอยู่บริเวณใด", c:["นอกระบบประสาทส่วนกลาง","ในสมองเท่านั้น","ในไขสันหลังส่วนกลาง","ในกล้ามเนื้อลาย"], a:0, e:"ganglion คือกลุ่มตัวเซลล์ประสาทที่อยู่นอก CNS"},
+  {q:"ช่องว่างขนาดเล็กระหว่างเซลล์ประสาท 2 เซลล์เรียกว่าอะไร", c:["ช่องไซแนปส์ (synaptic cleft)","โนดออฟรานเวียร์","ช่องกลวงไขสันหลัง","ช่องซับแอแรคนอยด์"], a:0, e:"synaptic cleft กว้าง ~0.02 µm กระแสข้ามเองไม่ได้"},
+  {q:"ไซแนปส์ไฟฟ้า (electrical synapse) ส่งสัญญาณผ่านโครงสร้างใด", c:["แกปจังก์ชัน (gap junction)","ถุงไซแนปส์ (vesicle)","ช่องแบบลิแกนด์เกต","โปรตีนยึดถุง"], a:0, e:"gap junction ให้ไอออนไหลตรงระหว่างเซลล์"},
+  {q:"ในไซแนปส์เคมี ไอออนใดกระตุ้นให้ถุงปล่อยสารสื่อประสาท", c:["แคลเซียม (Ca²⁺)","โซเดียม (Na⁺)","โพแทสเซียม (K⁺)","คลอไรด์ (Cl⁻)"], a:0, e:"AP เปิดช่อง Ca²⁺; Ca²⁺ เข้าเซลล์กระตุ้นการหลั่งสาร"},
+  {q:"สารสื่อประสาทที่ทำงานบริเวณรอยต่อประสาทกล้ามเนื้อ (NMJ) คือ", c:["แอซิทิลโคลีน (ACh)","โดพามีน","กาบา (GABA)","เซโรโทนิน"], a:0, e:"ACh เป็นสารสื่อที่ neuromuscular junction"},
+  {q:"เซลล์ที่สร้างสารสื่อประสาทชนิดใดตายในโรคพาร์กินสัน", c:["โดพามีน","แอซิทิลโคลีน","ฮิสตามีน","เอนดอร์ฟิน"], a:0, e:"พาร์กินสัน: เซลล์สร้าง dopamine ตาย ควบคุมการเคลื่อนไหวเสีย"},
+  {q:"สารสื่อประสาทใดช่วยลดความรู้สึกเจ็บปวด", c:["เอนดอร์ฟิน","เซโรโทนิน","กาบา (GABA)","ฮิสตามีน"], a:0, e:"endorphin เป็นฮอร์โมนจากต่อมใต้สมอง ลดความเจ็บปวด"},
+  {q:"สารสื่อประสาทใดทำหน้าที่ยับยั้งการส่งกระแสประสาท", c:["กาบา (GABA)","โดพามีน","แอซิทิลโคลีน","อิพิเนฟริน"], a:0, e:"GABA เป็น inhibitory neurotransmitter"},
+  {q:"เซโรโทนิน (Serotonin) เกี่ยวข้องกับภาวะใดมากที่สุด", c:["อารมณ์และภาวะซึมเศร้า","การหลั่งกรดในกระเพาะ","การกระตุ้นหัวใจ","การดมกลิ่น"], a:0, e:"serotonin ควบคุมอารมณ์ ความก้าวร้าว เกี่ยวข้องกับซึมเศร้า"},
+  {q:"Botulinum toxin ส่งผลต่อการส่งสัญญาณอย่างไร (ตามที่ระบุในบทเรียน)", c:["ยับยั้งการหลั่ง ACh","กระตุ้นการหลั่ง ACh","ยับยั้งเอนไซม์สลาย ACh","เพิ่มค่า threshold"], a:0, e:"botulinum ยับยั้งการหลั่ง ACh ส่งผลต่อการทำงานของกล้ามเนื้อ"},
+  {q:"Nicotine และ Caffeine ส่งผลต่อสารสื่อประสาทอย่างไร", c:["กระตุ้นการหลั่งสารสื่อประสาท","ลดการหลั่งสารสื่อประสาท","บล็อกไม่ให้ Na⁺ เข้าเซลล์","เพิ่มการทำงานของ GABA"], a:0, e:"เป็นสารกระตุ้น ทำให้ตื่นตัว หัวใจเต้นเร็ว"},
+  {q:"ระบบประสาทส่วนกลาง (CNS) ประกอบด้วยโครงสร้างใด", c:["สมองและไขสันหลัง","เส้นประสาทและปมประสาท","สมองและเส้นประสาทสมอง","ไขสันหลังและปมประสาท"], a:0, e:"CNS = สมอง + ไขสันหลัง; PNS = เส้นประสาท + ปมประสาท"},
+  {q:"เยื่อหุ้มสมองชั้นนอกสุดที่หนา เหนียว แข็งแรงคือชั้นใด", c:["ดูรามาเทอร์ (dura mater)","เพียมาเทอร์ (pia mater)","อะแรคนอยด์ (arachnoid)","โครอยด์เพล็กซัส"], a:0, e:"dura mater เป็นชั้นนอกสุด ป้องกันอันตราย"},
+  {q:"เยื่อหุ้มสมองชั้นในสุดที่แนบสนิทไปตามรอยหยักของสมองคือชั้นใด", c:["เพียมาเทอร์ (pia mater)","ดูรามาเทอร์ (dura mater)","อะแรคนอยด์ (arachnoid)","ช่องซับแอแรคนอยด์"], a:0, e:"pia mater แนบสนิท มีหลอดเลือดมาเลี้ยงมาก"},
+  {q:"น้ำเลี้ยงสมองและไขสันหลัง (CSF) ส่วนใหญ่สร้างจากเซลล์ใด", c:["เอเพนไดมัลเซลล์","แอสโทรไซต์","ชวานน์เซลล์","ไมโครเกลีย"], a:0, e:"CSF สร้างจาก ependymal cell ที่ choroid plexus (70%)"},
+  {q:"โรคที่เกิดจากการคั่งของน้ำเลี้ยงสมองเรียกว่าอะไร", c:["ไฮโดรเซฟาลัส","อัลไซเมอร์","พาร์กินสัน","เยื่อหุ้มสมองอักเสบ"], a:0, e:"hydrocephalus = ภาวะน้ำคั่งในสมอง"},
+  {q:"ก้านสมอง (brain stem) ประกอบด้วยโครงสร้างชุดใด", c:["สมองส่วนกลาง พอนส์ และเมดัลลา","ซีรีบรัมและซีรีเบลลัม","ทาลามัสและไฮโปทาลามัส","พอนส์และซีรีเบลลัม"], a:0, e:"brainstem = midbrain + pons + medulla oblongata"},
+  {q:"Olfactory bulb ทำหน้าที่เกี่ยวข้องกับสิ่งใด", c:["การดมกลิ่น","การมองเห็น","การได้ยิน","การทรงตัว"], a:0, e:"olfactory bulb เกี่ยวกับการดมกลิ่น เจริญดีในปลา กบ สัตว์เลื้อยคลาน"},
+  {q:"โครงสร้างใดเชื่อมสมองซีกซ้ายและซีกขวาเข้าด้วยกัน", c:["คอร์ปัสคาโลซัม","ออปติกไคแอสม์","เซนทรัลซัลคัส","คอร์ปัสสไตรเอตัม"], a:0, e:"corpus callosum เชื่อม cerebral hemisphere สองซีก"},
+  {q:"ทาลามัส (Thalamus) ทำหน้าที่หลักคืออะไร", c:["ศูนย์รวบรวมและกระจายกระแสประสาท","ควบคุมอุณหภูมิและความหิว","ควบคุมการทรงตัวและการเคลื่อนไหว","เป็นศูนย์ควบคุมการหายใจ"], a:0, e:"thalamus เป็นศูนย์รวบรวม/กระจายกระแสประสาทไปยังสมองส่วนต่าง ๆ"},
+  {q:"ไฮโปทาลามัส (Hypothalamus) ทำหน้าที่ควบคุมสิ่งใด", c:["อุณหภูมิ ความหิว และการนอน","การรวบรวมกระแสประสาท","การทรงตัวและการเคลื่อนไหว","การรับภาพจากตา"], a:0, e:"hypothalamus ควบคุม homeostasis และควบคุมต่อมใต้สมอง"},
+  {q:"อะมิกดาลา (Amygdala) ในระบบลิมบิกทำหน้าที่ใด", c:["ประมวลผลอารมณ์กลัวและโกรธ","แปลงความจำสั้นเป็นความจำยาว","ควบคุมจังหวะการหายใจ","ควบคุมการมองเห็น"], a:0, e:"amygdala เป็นศูนย์ประมวลผลทางอารมณ์ โดยเฉพาะกลัว/โกรธ"},
+  {q:"ฮิปโปแคมปัส (Hippocampus) มีบทบาทสำคัญในเรื่องใด", c:["แปลงความจำสั้นเป็นความจำยาว","ประมวลผลอารมณ์กลัวและโกรธ","ควบคุมอุณหภูมิร่างกาย","รับรู้กลิ่นจากจมูก"], a:0, e:"hippocampus เกี่ยวกับความจำระยะยาวและการเรียนรู้ (มักสับกับ amygdala)"},
+  {q:"ซีรีเบลลัม (Cerebellum) ทำหน้าที่หลักคืออะไร", c:["ควบคุมการเคลื่อนไหวให้ราบรื่น","ควบคุมความคิดและความจำ","เป็นศูนย์การหายใจอัตโนวัติ","สร้างน้ำเลี้ยงสมอง"], a:0, e:"cerebellum ทำให้การเคลื่อนไหวราบรื่น เที่ยงตรง และทรงตัวได้"},
+  {q:"เมดัลลาออบลองกาตาเป็นศูนย์ควบคุมสิ่งใดเป็นหลัก", c:["การหายใจและการเต้นของหัวใจ","ความคิดและการตัดสินใจ","การรับกลิ่นและการมองเห็น","การเรียนรู้และความจำ"], a:0, e:"medulla คุมการหายใจ การเต้นหัวใจ และ reflex ไอ จาม กลืน"},
+  {q:"พอนส์ (Pons) เป็นตำแหน่งของเส้นประสาทสมองคู่ใด", c:["คู่ที่ 5-7","คู่ที่ 1-2","คู่ที่ 8-12","คู่ที่ 3-4"], a:0, e:"pons เป็นตำแหน่ง CN คู่ที่ 5-7 (medulla คือ 8-12)"},
+  {q:"เมดัลลาออบลองกาตาเป็นตำแหน่งของเส้นประสาทสมองคู่ใด", c:["คู่ที่ 8-12","คู่ที่ 5-7","คู่ที่ 1-2","คู่ที่ 3-4"], a:0, e:"medulla เป็นตำแหน่ง CN คู่ที่ 8-12 (pons คือ 5-7)"},
+  {q:"ในผู้ใหญ่ ไขสันหลังเจริญสิ้นสุดที่กระดูกสันหลังระดับใด", c:["เอวข้อที่ 2 (L2)","เอวข้อที่ 3 (L3)","เอวข้อที่ 5 (L5)","อกข้อที่ 12 (T12)"], a:0, e:"adult ถึง L2; fetus ถึง L3; embryo ถึงโคนหาง"},
+  {q:"บริเวณใดเหมาะสมที่สุดสำหรับการเจาะตรวจน้ำไขสันหลัง (CSF)", c:["ระหว่าง L3-L4","ระหว่าง C1-C2","ระหว่าง T1-T2","ระหว่าง S2-S3"], a:0, e:"เจาะที่ L3-L4 เพราะต่ำกว่าปลายไขสันหลัง (~L2) จึงปลอดภัย"},
+  {q:"เส้นประสาทสมองในสัตว์เลี้ยงลูกด้วยนมและสัตว์เลื้อยคลานมีจำนวนเท่าใด", c:["12 คู่","10 คู่","31 คู่","8 คู่"], a:0, e:"mammal/reptile มี 12 คู่; ปลาและสัตว์สะเทินน้ำสะเทินบกมี 10 คู่"},
+  {q:"เส้นประสาทสมองในปลาและสัตว์สะเทินน้ำสะเทินบกมีจำนวนเท่าใด", c:["10 คู่","12 คู่","31 คู่","8 คู่"], a:0, e:"ปลา/สัตว์สะเทินน้ำสะเทินบกมี 10 คู่"},
+  {q:"เส้นประสาทไขสันหลังในคนมีจำนวนเท่าใด และเป็นชนิดใด", c:["31 คู่ เป็นเส้นประสาทผสม","12 คู่ เป็นเส้นประสาทผสม","10 คู่ เป็นเส้นประสาทรับความรู้สึก","24 คู่ เป็นเส้นประสาทสั่งการ"], a:0, e:"spinal nerve มี 31 คู่ เป็น mixed nerve ทั้งหมด"},
+  {q:"Vagus nerve คือเส้นประสาทสมองคู่ที่เท่าใด", c:["คู่ที่ 10","คู่ที่ 5","คู่ที่ 7","คู่ที่ 12"], a:0, e:"Vagus nerve = CN X (คู่ที่ 10)"},
+  {q:"ระบบประสาทโซมาติก (SNS) ควบคุมการทำงานของโครงสร้างใด", c:["กล้ามเนื้อโครงร่าง","กล้ามเนื้อเรียบ","กล้ามเนื้อหัวใจ","ต่อมไร้ท่อ"], a:0, e:"SNS ควบคุมกล้ามเนื้อลาย (voluntary)"},
+  {q:"ระบบประสาทอัตโนวัติ (ANS) ควบคุมการทำงานของโครงสร้างใด", c:["กล้ามเนื้อเรียบและกล้ามเนื้อหัวใจ","กล้ามเนื้อโครงร่างทั้งหมด","กระดูกและข้อต่อ","ผิวหนังและขน"], a:0, e:"ANS ควบคุมกล้ามเนื้อเรียบ กล้ามเนื้อหัวใจ ต่อม (involuntary)"},
+  {q:"ระบบซิมพาเทติกกระตุ้นให้ร่างกายเข้าสู่ภาวะใด", c:["ต่อสู้หรือหนี","พักและย่อยอาหาร","กิจกรรมปกติสงบ","การนอนหลับลึก"], a:0, e:"sympathetic = fight or flight (พารา = rest and digest)"},
+  {q:"สารสื่อประสาทที่หน่วยตอบสนองของซิมพาเทติกส่วนใหญ่หลั่งคือ", c:["นอร์อิพิเนฟริน","แอซิทิลโคลีน","โดพามีน","กาบา (GABA)"], a:0, e:"postganglionic sympathetic ส่วนใหญ่หลั่ง norepinephrine"},
+  {q:"เซลล์ประสาทก่อนไซแนปส์ (preganglionic) ของซิมพาเทติกมีลักษณะใด", c:["สั้น","ยาว","เท่ากับ postganglionic","ไม่มีเลย"], a:0, e:"sympathetic: pre สั้น–post ยาว (พารา: pre ยาว–post สั้น)"},
+  {q:"รีเฟล็กซ์แบบ Monosynaptic คือตัวอย่างใด", c:["การเคาะเอ็นหัวเข่า","การยกเท้าหนีเมื่อเหยียบตะปู","การชักมือหนีของร้อน","การกระพริบตาเมื่อฝุ่นเข้า"], a:0, e:"knee-jerk เป็น monosynaptic (sensory→motor) ที่เหลือเป็น polysynaptic"},
+  {q:"ปฏิกิริยารีเฟล็กซ์ (reflex) ทำงานผ่านศูนย์กลางใดโดยตรง", c:["ไขสันหลัง","สมองส่วนหน้า","ซีรีเบลลัม","ทาลามัส"], a:0, e:"reflex สั่งการผ่านไขสันหลังโดยตรง โดยไม่ต้องรอสมอง"},
+  {q:"เนื้อสีเทา (grey matter) ในระบบประสาทประกอบด้วยอะไร", c:["ตัวเซลล์และแอกซอนที่ไม่มีไมอีลิน","แอกซอนที่มีไมอีลินเท่านั้น","เฉพาะเยื่อไมอีลิน","เฉพาะน้ำเลี้ยงสมอง"], a:0, e:"grey matter มีตัวเซลล์+non-myelinated axon; white matter มี myelinated axon"},
+  {q:"หากดีโพลาไรเซชันเพิ่มขึ้นจนถึงระดับ threshold จะเกิดเหตุการณ์ใด", c:["เกิดแอกชันโพเทนเชียล","กลับสู่ระยะพักทันที","เกิดไฮเพอร์โพลาไรเซชัน","กระแสประสาทย้อนกลับ"], a:0, e:"ตามกฎ all-or-none เมื่อถึง threshold จะเกิด action potential"},
+  {q:"อาการเด่นของโรคพาร์กินสันที่สัมพันธ์กับการขาดโดพามีนคือข้อใด", c:["กล้ามเนื้อสั่นและเคลื่อนไหวช้า","สูญเสียความจำระยะสั้น","น้ำคั่งในโพรงสมอง","ปวดศีรษะเฉียบพลันรุนแรง"], a:0, e:"พาร์กินสัน: สั่น (โดยเฉพาะมือ) เกร็ง เคลื่อนไหวช้า ทรงตัวลำบาก"},
+  {q:"ลักษณะพยาธิสภาพเด่นในสมองของผู้ป่วยอัลไซเมอร์คือข้อใด", c:["การสะสม amyloid และโปรตีน Tau","การตายของเซลล์สร้างโดพามีน","การคั่งของน้ำเลี้ยงสมอง","การเสื่อมของปลอกไมอีลิน"], a:0, e:"อัลไซเมอร์: สะสม amyloid/Tau ทำให้ ACh ที่เกี่ยวกับความจำลดลง"}
+];
+
+let order=[], idx=0, score=0, answered=false;
+const $=id=>document.getElementById(id);
+const total=QUESTIONS.length;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function start(){order=shuffle([...Array(total).keys()]); idx=0; score=0; answered=false;
+  $("quizCard").style.display="block"; $("resultCard").classList.remove("show"); render();}
+function render(){
+  answered=false;
+  const q=QUESTIONS[order[idx]];
+  $("counter").textContent=`ข้อ ${idx+1} / ${total}`;
+  $("scoreLive").textContent=`คะแนน ${score}`;
+  $("progFill").style.width=`${(idx/total)*100}%`;
+  $("qnum").textContent=`คำถามที่ ${idx+1}`;
+  $("qText").textContent=q.q;
+  const opts=q.c.map((t,i)=>({t,correct:i===q.a})); shuffle(opts);
+  const box=$("choices"); box.innerHTML="";
+  const L=["ก","ข","ค","ง"];
+  opts.forEach((o,i)=>{const b=document.createElement("button"); b.className="choice";
+    b.innerHTML=`<span class="tag">${L[i]}</span><span>${o.t}</span>`;
+    b.onclick=()=>pick(b,o.correct,box); box.appendChild(b);});
+  const ex=$("explain"); ex.classList.remove("show"); ex.innerHTML="";
+  $("nextBtn").disabled=true;
+  $("nextBtn").textContent=(idx===total-1)?"ดูผลคะแนน 🏁":"ถัดไป →";
+}
+function pick(btn,ok,box){
+  if(answered)return; answered=true;
+  const kids=box.children;
+  for(let i=0;i<kids.length;i++)kids[i].disabled=true;
+  const correctText=QUESTIONS[order[idx]].c[QUESTIONS[order[idx]].a];
+  if(ok){btn.classList.add("correct"); score++;}
+  else{btn.classList.add("wrong");
+    for(let i=0;i<kids.length;i++){
+      if(kids[i].querySelector("span:last-child").textContent===correctText)kids[i].classList.add("correct");}}
+  $("scoreLive").textContent=`คะแนน ${score}`;
+  const q=QUESTIONS[order[idx]];
+  if(q.e){const ex=$("explain"); ex.innerHTML=`<b>💡 เฉลย:</b> ${q.e}`; ex.classList.add("show");}
+  $("nextBtn").disabled=false;
+}
+$("nextBtn").onclick=function(){if(!answered)return; if(idx<total-1){idx++; render();} else finish();};
+function finish(){
+  $("quizCard").style.display="none";
+  const pct=Math.round((score/total)*100);
+  $("finalScore").textContent=score;
+  let medal="🎯",msg="";
+  if(pct>=90){medal="🏆";msg="ยอดเยี่ยม! ไม่โดนช้อยหลอกเลย";}
+  else if(pct>=75){medal="🌟";msg="เก่งมาก แยกช้อยหลอกได้ดี";}
+  else if(pct>=50){medal="👍";msg="ดีแล้ว ทบทวนจุดที่โดนหลอกอีกนิด";}
+  else{medal="📚";msg="ช้อยหลอกทำงานได้ผล ลองอ่านสไลด์แล้วมาใหม่";}
+  $("medal").textContent=medal;
+  $("finalMsg").textContent=`${msg} (${pct}%)`;
+  $("resultCard").classList.add("show");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("restartBtn").onclick=start;
+start();
+</script>
+</body>
+</html>
